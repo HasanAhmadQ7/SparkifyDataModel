@@ -19,13 +19,6 @@ def copy_dataframe(cur, df, table_name, sep=',', null=False):
         cur.copy_from(sio, table_name, columns=df.columns, sep=sep)
 
 
-#     sio = StringIO()
-#     sio.write(time_df.to_csv(index=None, header=None))
-#     # Write the Pandas DataFrame as a csv to the buffer
-#     sio.seek(0)
-
-#     cur.copy_from(sio, "time", columns=time_df.columns, sep=',')
-
 def process_song_file(cur, filepath):
     # open song file
     df = pd.read_json(filepath, lines=True)
