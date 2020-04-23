@@ -8,18 +8,16 @@ from psycopg2.extensions import register_adapter, AsIs
 from io import StringIO
 
 
-def copy_dataframe(cur, df, table_name, sep=',', null=False):
-    sio = StringIO()
-    sio.write(df.to_csv(sep=sep, index=None, header=None))
-    # Write the Pandas DataFrame as a csv to the buffer
-    sio.seek(0)
-    if null:
-        cur.copy_from(sio, table_name, columns=df.columns, sep=sep, null="")
-    else:
-        cur.copy_from(sio, table_name, columns=df.columns, sep=sep)
-
-
 def process_song_file(cur, filepath):
+    """Extracts data from a song file and loads it to the corresponding
+    tables.
+
+    The destination tables are: songs, artists
+    Args:
+        cur (pyscopg cursor): A cursor that allows executing commands against the database.
+        filepath: A path to the song file.
+    """
+
     # open song file
     df = pd.read_json(filepath, lines=True)
     # insert song record
@@ -49,19 +47,27 @@ def process_song_file(cur, filepath):
 
 
 def process_log_file(cur, filepath):
+    """Extracts data from a log file, combines it with data from other tables and loads it to the corresponding
+    tables.
+
+    Args:
+        cur (pyscopg cursor): A cursor that allows executing commands against the database.
+        filepath: A path to the log file.
+    """
+
     # open log file
     df = pd.read_json(filepath, lines=True)
 
     # filter by NextSong action
     df = df[df["page"] == "NextSong"]
 
-    # convert timestamp column to datetime
+    # convert timestamp (ts) column to datetime (ts_dt)
     ts = df["ts"]
-    tsdt = pd.to_datetime(df["ts"])
+    ts_dt = pd.to_datetime(df["ts"])
 
     # insert time data records
-    time_data = (ts, tsdt.dt.hour, tsdt.dt.day, tsdt.dt.week,
-                 tsdt.dt.month, tsdt.dt.year, tsdt.dt.weekday)
+    time_data = (ts, ts_dt.dt.hour, ts_dt.dt.day, ts_dt.dt.week, ts_dt.dt.month,
+                 ts_dt.dt.year, ts_dt.dt.weekday)
     column_labels = ("start_time", "hour", "day",
                      "week", "month", "year", "weekday")
     combined_dict = dict(zip(column_labels, time_data))
@@ -69,28 +75,21 @@ def process_log_file(cur, filepath):
     # remove duplicates
     time_df.drop_duplicates(subset='start_time', keep="first", inplace=True)
 
-    copy_dataframe(cur, time_df, "time")
+    for i, row in time_df.iterrows():
+        cur.execute(time_table_insert, row)
 
     # load user table
     user_df = df[["userId", "firstName", "lastName", "gender", "level"]]
     user_df_columns = {"userId": "user_id", "firstName": "first_name",
                        "lastName": "last_name"}
-    print("before", user_df)
     user_df = user_df.rename(columns=user_df_columns)
-    print("after", user_df)
-    print("user_df cols", user_df.columns)
     user_df.drop_duplicates(subset='user_id', keep="last", inplace=True)
-    print("after dropping", user_df)
-    print("con", user_df[user_df["user_id"] == 52])
-
-    copy_dataframe(cur, user_df, "users")
-
-
+    # insert user records
+    for i, row in user_df.iterrows():
+        cur.execute(user_table_insert, row)
 
     # insert songplay records
-    data = []
     for index, row in df.iterrows():
-
         # get songid and artistid from song and artist tables
         cur.execute(song_select, (row.song, row.artist, row.length))
         results = cur.fetchone()
@@ -111,15 +110,18 @@ def process_log_file(cur, filepath):
             row.location,
             row.userAgent,
         )
-        data.append(songplay_data)
-    songplay_columns = ["songplay_id", "start_time", "user_id", "level", "song_id", "artist_id", "session_id",
-                        "location", "user_agent"]
-    songplays_df = pd.DataFrame(data, columns=songplay_columns)
-    songplays_df.drop_duplicates(subset='songplay_id', keep="first", inplace=True)
-    copy_dataframe(cur, songplays_df, "songplays", sep="\t", null=True)
+        cur.execute(songplay_table_insert, songplay_data)
 
 
 def process_data(cur, conn, filepath, func):
+    """Iteratively executes an ETL function on files in a specific folder.
+
+    Args:
+        cur (pyscopg cursor): A cursor object that allows executing commands against the database.
+        conn (connection): A connection object to the database
+        filepath: A path to the directory containing the data files
+        func: A function to be executed
+    """
     # get all files matching extension from directory
     all_files = []
     for root, dirs, files in os.walk(filepath):
