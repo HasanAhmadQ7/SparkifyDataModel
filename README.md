@@ -37,11 +37,11 @@ the tables and the ETL pipelines powering storing them in a starschema.
 
 We assume the user requirements include queries such as below:
 
-1- find the user-id with most count of song plays.
-2- find location with the most number of play
-3- find the user_agent with the most number of plays 
-4- find the time of the day with the most number of plays
-5- find information about the paid songplays
+1. find the user-id with most count of song plays.
+2. find location with the most number of play
+3. find the user_agent with the most number of plays 
+4. find the time of the day with the most number of plays
+5. find information about the paid songplays
 
 We can see based on these queries, that facts such as the userAgent, location, level are important to run these 
 analytics. We can see how this star schema allows for efficient analysis in the test.ipynb file provided in this project.
