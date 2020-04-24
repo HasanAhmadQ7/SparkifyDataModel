@@ -42,7 +42,8 @@ def drop_tables(cur, conn):
     """Drops all tables of the starschema.
 
     Args:
-        cur (pyscopg cursor): A cursor that allows executing commands against the database.
+        cur (pyscopg cursor): A cursor that allows executing
+        commands against the database.
         conn (connection): A connection object to the database
     """
     for query in drop_table_queries:
@@ -54,7 +55,8 @@ def create_tables(cur, conn):
     """Creates all tables of the starschema.
 
     Args:
-        cur (pyscopg cursor): A cursor that allows executing commands against the database.
+        cur (pyscopg cursor): A cursor that allows executing commands
+         against the database.
         conn (connection): A connection object to the database
     """
     for query in create_table_queries:

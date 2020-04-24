@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from sql_queries import *
 from psycopg2.extensions import register_adapter, AsIs
-from io import StringIO
 
 
 def process_song_file(cur, filepath):
@@ -14,7 +13,8 @@ def process_song_file(cur, filepath):
 
     The destination tables are: songs, artists
     Args:
-        cur (pyscopg cursor): A cursor that allows executing commands against the database.
+        cur (pyscopg cursor): A cursor that allows executing commands
+         against the database.
         filepath: A path to the song file.
     """
 
@@ -47,11 +47,12 @@ def process_song_file(cur, filepath):
 
 
 def process_log_file(cur, filepath):
-    """Extracts data from a log file, combines it with data from other tables and loads it to the corresponding
-    tables.
+    """Extracts data from a log file, combines it with data from
+    other tables and loads it to the corresponding tables.
 
     Args:
-        cur (pyscopg cursor): A cursor that allows executing commands against the database.
+        cur (pyscopg cursor): A cursor that allows executing
+        commands against the database.
         filepath: A path to the log file.
     """
 
@@ -66,8 +67,8 @@ def process_log_file(cur, filepath):
     ts_dt = pd.to_datetime(df["ts"])
 
     # insert time data records
-    time_data = (ts, ts_dt.dt.hour, ts_dt.dt.day, ts_dt.dt.week, ts_dt.dt.month,
-                 ts_dt.dt.year, ts_dt.dt.weekday)
+    time_data = (ts, ts_dt.dt.hour, ts_dt.dt.day, ts_dt.dt.week,
+                 ts_dt.dt.month, ts_dt.dt.year, ts_dt.dt.weekday)
     column_labels = ("start_time", "hour", "day",
                      "week", "month", "year", "weekday")
     combined_dict = dict(zip(column_labels, time_data))
@@ -117,7 +118,8 @@ def process_data(cur, conn, filepath, func):
     """Iteratively executes an ETL function on files in a specific folder.
 
     Args:
-        cur (pyscopg cursor): A cursor object that allows executing commands against the database.
+        cur (pyscopg cursor): A cursor object that allows executing commands
+         against the database.
         conn (connection): A connection object to the database
         filepath: A path to the directory containing the data files
         func: A function to be executed
