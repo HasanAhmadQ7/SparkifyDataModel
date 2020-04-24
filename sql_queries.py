@@ -10,14 +10,11 @@ time_table_drop = "DROP TABLE IF EXISTS time CASCADE;"
 # CREATE TABLES
 
 songplay_table_create = """CREATE TABLE IF NOT EXISTS songplays
-    ( songplay_id Integer PRIMARY KEY,
-      start_time BigInt REFERENCES time(start_time),
-      user_id Integer NULL, level varchar,
-      song_id varchar NULL, artist_id varchar NULL,
-      session_id Integer, location varchar, user_agent varchar,
-      FOREIGN KEY (song_id) REFERENCES songs(song_id),
-      FOREIGN KEY (artist_id) REFERENCES artists(artist_id),
-      FOREIGN KEY (user_id) REFERENCES users(user_id));
+    ( songplay_id SERIAL PRIMARY KEY,
+      start_time BigInt,
+      user_id Integer, level varchar,
+      song_id varchar , artist_id varchar,
+      session_id Integer, location varchar, user_agent varchar);
     """
 
 user_table_create = """CREATE TABLE IF NOT EXISTS users
